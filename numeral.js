@@ -820,6 +820,7 @@
                     after: format.match(/([\+|\-|\)|\s|\$]*)$/)[0]
                 },
                 output,
+                signed,
                 symbol,
                 i;
 
@@ -829,11 +830,15 @@
             // format the number
             output = numeral._.numberToFormat(value, format, roundingFunction);
 
-            // update the before and after based on value
-            if (value >= 0) {
+            // Minus-only formats request a sign only for negative input.
+            signed = !numeral._.includes(format, '(') && (numeral._.includes(format, '+') || value < 0 && numeral._.includes(format, '-'));
+
+            // Match the sign actually emitted after rounding, without parsing
+            // locale-specific decimal/grouping delimiters or abbreviations.
+            if (!/^[+\-(]/.test(output) && !(signed && /[+\-]$/.test(output))) {
                 symbols.before = symbols.before.replace(/[\-\(]/, '');
                 symbols.after = symbols.after.replace(/[\-\)]/, '');
-            } else if (value < 0 && (!numeral._.includes(symbols.before, '-') && !numeral._.includes(symbols.before, '('))) {
+            } else if (output.charAt(0) === '-' && !/[+\-]/.test(symbols.before)) {
                 symbols.before = '-' + symbols.before;
             }
 
